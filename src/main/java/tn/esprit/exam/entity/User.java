@@ -1,0 +1,42 @@
+package tn.esprit.exam.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
+@Entity
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Table(name = "users")
+public class User
+
+{
+    @Id
+    @GeneratedValue
+    UUID id;
+
+    @Column(nullable = false, unique = true)
+    String email;
+
+    @Column(nullable = false, unique = true)
+    String username;
+
+    @Column(name = "password_hash", nullable = false)
+    String passwordHash;
+
+    @Enumerated(EnumType.STRING)
+    Role role = Role.USER;   // Default role
+
+    @Column(name = "default_visibility", nullable = false)
+    String defaultVisibility = "PRIVATE";
+
+    @Column(name = "created_at", nullable = false)
+    OffsetDateTime createdAt = OffsetDateTime.now();
+}
