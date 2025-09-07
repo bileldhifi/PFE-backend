@@ -1,6 +1,7 @@
 package tn.esprit.exam.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tn.esprit.exam.entity.User;
 import tn.esprit.exam.repository.UserRepository;
@@ -12,7 +13,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @Slf4j
 public class UserServiceImpl implements IUserService{
-    UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public List<User> retrieveAllUsers() {
@@ -29,6 +31,11 @@ public class UserServiceImpl implements IUserService{
 
     @Override
     public User addUser(User user) {
+        // Hash the password before saving
+        String rawPassword = user.getPasswordHash();
+        user.setPasswordHash(passwordEncoder.encode(rawPassword));
+
+        log.info("Registering new user: {}", user.getEmail());
         return userRepository.save(user);
     }
 
