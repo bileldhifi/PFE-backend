@@ -1,10 +1,7 @@
 package tn.esprit.exam.control;
 
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import tn.esprit.exam.dto.AuthResponse;
 import tn.esprit.exam.dto.LoginRequest;
 import tn.esprit.exam.service.AuthService;
@@ -19,5 +16,17 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@RequestBody LoginRequest request) {
         return authService.login(request);
+    }
+
+    @PostMapping("/forgot-password")
+    public String forgotPassword(@RequestParam String email) {
+        return authService.forgotPassword(email);
+    }
+
+    @PostMapping("/reset-password")
+    public String resetPassword(@RequestParam String token,
+                                @RequestParam String newPassword) {
+        authService.resetPassword(token, newPassword);
+        return "Password updated successfully";
     }
 }
