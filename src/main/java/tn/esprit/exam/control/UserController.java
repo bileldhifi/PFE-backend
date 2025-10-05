@@ -2,6 +2,8 @@ package tn.esprit.exam.control;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import tn.esprit.exam.dto.UserRequest;
+import tn.esprit.exam.dto.UserResponse;
 import tn.esprit.exam.entity.User;
 import tn.esprit.exam.service.IUserService;
 
@@ -16,28 +18,28 @@ public class UserController {
 
     IUserService userService;
 
-    @GetMapping("/all")
-    public List<User> getAllUsers() {
+    @GetMapping
+    public List<UserResponse> getAllUsers() {
         return userService.retrieveAllUsers();
     }
 
-    @GetMapping("/{id}")
-    public User getUser(@PathVariable UUID id) {
-        return userService.retrieveUser(id);
+    @GetMapping("/{userId}")
+    public UserResponse getUser(@PathVariable UUID userId) {
+        return userService.retrieveUser(userId);
     }
 
     @PostMapping("/add")
-    public User addUser(@RequestBody User user) {
-        return userService.addUser(user);
+    public UserResponse addUser(@RequestBody UserRequest request) {
+        return userService.addUser(request);
     }
 
-    @PutMapping("/update")
-    public User updateUser(@RequestBody User user) {
-        return userService.modifyUser(user);
+    @PutMapping("/{userId}")
+    public UserResponse updateUser(@PathVariable UUID userId, @RequestBody UserRequest request) {
+        return userService.modifyUser(userId, request);
     }
 
-    @DeleteMapping("/delete/{id}")
-    public void deleteUser(@PathVariable UUID id) {
-        userService.removeUser(id);
+    @DeleteMapping("/{userId}")
+    public void deleteUser(@PathVariable UUID userId) {
+        userService.removeUser(userId);
     }
 }

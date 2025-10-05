@@ -3,6 +3,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import tn.esprit.exam.dto.UserRequest;
+import tn.esprit.exam.dto.UserResponse;
+import tn.esprit.exam.entity.Role;
 import tn.esprit.exam.entity.User;
 import tn.esprit.exam.repository.UserRepository;
 
@@ -17,35 +20,54 @@ public class UserServiceImpl implements IUserService{
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public List<User> retrieveAllUsers() {
-        List<User> list = userRepository.findAll();
-        log.info("Total users: " + list.size());
-        list.forEach(u -> log.info("User: " + u));
-        return list;
+    public List<UserResponse> retrieveAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::toDto)
+                .toList();
     }
 
     @Override
-    public User retrieveUser(UUID userId) {
-        return userRepository.findById(userId).orElse(null);
+    public UserResponse retrieveUser(UUID userId) {
+        return userRepository.findById(userId)
+                .map(this::toDto)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     @Override
-    public User addUser(User user) {
-        // Hash the password before saving
-        String rawPassword = user.getPasswordHash();
-        user.setPasswordHash(passwordEncoder.encode(rawPassword));
-
-        log.info("Registering new user: {}", user.getEmail());
-        return userRepository.save(user);
+    public UserResponse addUser(UserRequest request) {
+        User user = new User();
+        user.setEmail(request.email());
+        user.setUsername(request.username());
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setRole(Role.USER);
+        userRepository.save(user);
+        return toDto(user);
     }
 
     @Override
-    public User modifyUser(User user) {
-        return userRepository.save(user);
+    public UserResponse modifyUser(UUID userId, UserRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setUsername(request.username());
+        user.setEmail(request.email());
+        userRepository.save(user);
+        return toDto(user);
     }
 
     @Override
     public void removeUser(UUID userId) {
         userRepository.deleteById(userId);
+    }
+
+    // 🔹 Utility mapper
+    private UserResponse toDto(User user) {
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getUsername(),
+                user.getRole().name(),
+                user.getDefaultVisibility(),
+                user.getCreatedAt()
+        );
     }
 }

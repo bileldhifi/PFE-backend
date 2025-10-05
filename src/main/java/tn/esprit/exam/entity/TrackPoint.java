@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "track_points")
@@ -24,14 +25,10 @@ public class TrackPoint {
     Trip trip;
 
     @Column(nullable = false)
-    OffsetDateTime ts; // timestamp of the GPS point
+    OffsetDateTime ts;
 
-    @Column(nullable = false)
     Double lat;
-
-    @Column(nullable = false)
     Double lon;
-
     Double accuracyM;
     Double speedMps;
 }

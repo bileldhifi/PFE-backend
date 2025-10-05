@@ -1,5 +1,6 @@
 package tn.esprit.exam.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -28,6 +29,7 @@ public class User
     @Column(nullable = false, unique = true)
     String username;
 
+    @JsonIgnore
     @Column(name = "password_hash", nullable = false)
     String passwordHash;
 

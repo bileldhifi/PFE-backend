@@ -1,5 +1,6 @@
 package tn.esprit.exam.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -21,25 +22,21 @@ public class Post {
     @GeneratedValue
     UUID id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", nullable = false)
     Trip trip;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     User user;
 
     @Column(nullable = false)
-    OffsetDateTime ts;
+    private OffsetDateTime ts = OffsetDateTime.now();
 
     @Column(columnDefinition = "TEXT")
     String text;
-
-    @Column(nullable = false)
-    Double lat;
-
-    @Column(nullable = false)
-    Double lon;
 
     String city;
     String country;
@@ -48,6 +45,11 @@ public class Post {
     @Column(nullable = false)
     Visibility visibility;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "track_point_id", nullable = true)
+    private TrackPoint trackPoint;
+
+    @JsonIgnore
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Media> media;
 }

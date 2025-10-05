@@ -3,6 +3,7 @@ package tn.esprit.exam.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import tn.esprit.exam.dto.MediaResponse;
 import tn.esprit.exam.entity.Media;
 import tn.esprit.exam.entity.MediaKind;
 import tn.esprit.exam.entity.Post;
@@ -22,10 +23,10 @@ public class MediaServiceImpl implements IMediaService {
     private final MediaRepository mediaRepository;
     private final PostRepository postRepository;
 
-    private final String UPLOAD_DIR = "uploads/";
+    private final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
 
     @Override
-    public Media uploadMedia(UUID postId, MultipartFile file, MediaKind type) throws IOException {
+    public MediaResponse uploadMedia(UUID postId, MultipartFile file, MediaKind type) throws IOException {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
@@ -44,6 +45,8 @@ public class MediaServiceImpl implements IMediaService {
         media.setUrl("/uploads/" + filename);
         media.setSizeBytes(file.getSize());
 
-        return mediaRepository.save(media);
+        Media saved = mediaRepository.save(media);
+        return new MediaResponse(saved.getId(), saved.getType(), saved.getUrl(),
+                saved.getSizeBytes(), saved.getWidth(), saved.getHeight(), saved.getDurationS());
     }
 }

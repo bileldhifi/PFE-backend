@@ -1,5 +1,6 @@
 package tn.esprit.exam.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -21,6 +22,7 @@ public class Trip {
     @GeneratedValue
     UUID id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     User user;
@@ -37,10 +39,12 @@ public class Trip {
     Double totalDistanceKm;
 
     // Relation with track points
+    @JsonIgnore
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
     List<TrackPoint> trackPoints;
 
     // Relation with posts
+    @JsonIgnore
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Post> posts;
 }
