@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import tn.esprit.exam.config.JwtService;
 import tn.esprit.exam.dto.AuthResponse;
 import tn.esprit.exam.dto.LoginRequest;
+import tn.esprit.exam.dto.UserResponse;
 import tn.esprit.exam.entity.ResetPasswordToken;
 import tn.esprit.exam.entity.User;
 import tn.esprit.exam.repository.ResetPasswordTokenRepository;
@@ -41,8 +42,19 @@ public class AuthService {
 
         String token = jwtService.generateToken(user.getEmail(), claims);
 
-        return new AuthResponse(token);
+        // ✅ Convert to UserResponse DTO
+        UserResponse userDto = new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getUsername(),
+                user.getRole().name(),
+                user.getDefaultVisibility(),
+                user.getCreatedAt()
+        );
+
+        return new AuthResponse(token, userDto);
     }
+
 
     public String forgotPassword(String email) {
         User user = userRepository.findByEmail(email)

@@ -1,4 +1,5 @@
 package tn.esprit.exam.dto;
 
-public record AuthResponse(String token) {
+public record AuthResponse(String accessToken,
+                           UserResponse user) {
 }
