@@ -2,10 +2,13 @@ package tn.esprit.exam.service;
 
 import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tn.esprit.exam.config.JwtService;
 import tn.esprit.exam.dto.AuthResponse;
+import tn.esprit.exam.dto.ChangePasswordRequest;
 import tn.esprit.exam.dto.LoginRequest;
 import tn.esprit.exam.dto.UserResponse;
 import tn.esprit.exam.entity.ResetPasswordToken;
@@ -40,7 +43,8 @@ public class AuthService {
         claims.put("role", user.getRole().name());
         claims.put("uid", user.getId().toString());
 
-        String token = jwtService.generateToken(user.getEmail(), claims);
+        String accessToken = jwtService.generateToken(user.getEmail(), claims);
+        String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
         // ✅ Convert to UserResponse DTO
         UserResponse userDto = new UserResponse(
@@ -52,7 +56,7 @@ public class AuthService {
                 user.getCreatedAt()
         );
 
-        return new AuthResponse(token, userDto);
+        return new AuthResponse(accessToken, refreshToken, userDto);
     }
 
 
@@ -101,5 +105,59 @@ public class AuthService {
         userRepository.save(user);
 
         tokenRepository.delete(resetToken); // one-time use
+    }
+
+    public void changePassword(ChangePasswordRequest request) {
+        // Get current user from security context
+        String currentUserEmail = getCurrentUserEmail();
+        
+        User user = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Verify current password
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+
+        // Update password
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    public AuthResponse refreshToken(String refreshToken) {
+        // Validate refresh token
+        String email = jwtService.extractUsername(refreshToken);
+        
+        // Find user
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Generate new tokens
+        var claims = new HashMap<String, Object>();
+        claims.put("role", user.getRole().name());
+        claims.put("uid", user.getId().toString());
+
+        String newAccessToken = jwtService.generateToken(user.getEmail(), claims);
+        String newRefreshToken = jwtService.generateRefreshToken(user.getEmail());
+
+        // Convert to UserResponse DTO
+        UserResponse userDto = new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getUsername(),
+                user.getRole().name(),
+                user.getDefaultVisibility(),
+                user.getCreatedAt()
+        );
+
+        return new AuthResponse(newAccessToken, newRefreshToken, userDto);
+    }
+
+    private String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            return authentication.getName(); // This returns the email from JWT
+        }
+        throw new RuntimeException("User not authenticated");
     }
 }

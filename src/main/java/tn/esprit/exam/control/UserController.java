@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.exam.dto.UserRequest;
 import tn.esprit.exam.dto.UserResponse;
-import tn.esprit.exam.entity.User;
 import tn.esprit.exam.service.IUserService;
 
 import java.util.List;
@@ -22,6 +21,7 @@ public class UserController {
     public List<UserResponse> getAllUsers() {
         return userService.retrieveAllUsers();
     }
+
 
     @GetMapping("/{userId}")
     public UserResponse getUser(@PathVariable UUID userId) {

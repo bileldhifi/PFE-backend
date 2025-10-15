@@ -3,6 +3,7 @@ package tn.esprit.exam.control;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.exam.dto.AuthResponse;
+import tn.esprit.exam.dto.ChangePasswordRequest;
 import tn.esprit.exam.dto.LoginRequest;
 import tn.esprit.exam.dto.UserRequest;
 import tn.esprit.exam.dto.UserResponse;
@@ -37,5 +38,16 @@ public class AuthController {
                                 @RequestParam String newPassword) {
         authService.resetPassword(token, newPassword);
         return "Password reset successful!";
+    }
+
+    @PutMapping("/change-password")
+    public String changePassword(@RequestBody ChangePasswordRequest request) {
+        authService.changePassword(request);
+        return "Password changed successfully!";
+    }
+
+    @PostMapping("/refresh")
+    public AuthResponse refreshToken(@RequestParam String refreshToken) {
+        return authService.refreshToken(refreshToken);
     }
 }
