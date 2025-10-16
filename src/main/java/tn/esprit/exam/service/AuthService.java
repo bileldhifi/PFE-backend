@@ -53,7 +53,13 @@ public class AuthService {
                 user.getUsername(),
                 user.getRole().name(),
                 user.getDefaultVisibility(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.getBio(),
+                user.getAvatarUrl(),
+                user.getTripsCount(),
+                user.getStepsCount(),
+                user.getFollowersCount(),
+                user.getFollowingCount()
         );
 
         return new AuthResponse(accessToken, refreshToken, userDto);
@@ -147,7 +153,13 @@ public class AuthService {
                 user.getUsername(),
                 user.getRole().name(),
                 user.getDefaultVisibility(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.getBio(),
+                user.getAvatarUrl(),
+                user.getTripsCount(),
+                user.getStepsCount(),
+                user.getFollowersCount(),
+                user.getFollowingCount()
         );
 
         return new AuthResponse(newAccessToken, newRefreshToken, userDto);

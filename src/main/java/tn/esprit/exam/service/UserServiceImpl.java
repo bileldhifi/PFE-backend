@@ -48,8 +48,24 @@ public class UserServiceImpl implements IUserService{
     public UserResponse modifyUser(UUID userId, UserRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setUsername(request.username());
-        user.setEmail(request.email());
+        
+        // Only update fields that are not null
+        if (request.username() != null) {
+            user.setUsername(request.username());
+        }
+        if (request.email() != null) {
+            user.setEmail(request.email());
+        }
+        if (request.bio() != null) {
+            user.setBio(request.bio());
+        }
+        if (request.avatarUrl() != null) {
+            user.setAvatarUrl(request.avatarUrl());
+        }
+        if (request.defaultVisibility() != null) {
+            user.setDefaultVisibility(request.defaultVisibility());
+        }
+        
         userRepository.save(user);
         return toDto(user);
     }
@@ -67,7 +83,13 @@ public class UserServiceImpl implements IUserService{
                 user.getUsername(),
                 user.getRole().name(),
                 user.getDefaultVisibility(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.getBio(),
+                user.getAvatarUrl(),
+                user.getTripsCount(),
+                user.getStepsCount(),
+                user.getFollowersCount(),
+                user.getFollowingCount()
         );
     }
 }

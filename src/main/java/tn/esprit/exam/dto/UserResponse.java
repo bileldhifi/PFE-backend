@@ -8,5 +8,11 @@ public record UserResponse(UUID id,
                            String username,
                            String role,
                            String defaultVisibility,
-                           OffsetDateTime createdAt) {
+                           OffsetDateTime createdAt,
+                           String bio,
+                           String avatarUrl,
+                           int tripsCount,
+                           int stepsCount,
+                           int followersCount,
+                           int followingCount) {
 }

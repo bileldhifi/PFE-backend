@@ -41,4 +41,22 @@ public class User
 
     @Column(name = "created_at", nullable = false)
     OffsetDateTime createdAt = OffsetDateTime.now();
+
+    @Column(columnDefinition = "TEXT")
+    String bio;
+
+    @Column(name = "avatar_url")
+    String avatarUrl;
+
+    @Column(name = "trips_count")
+    Integer tripsCount = 0;
+
+    @Column(name = "steps_count")
+    Integer stepsCount = 0;
+
+    @Column(name = "followers_count")
+    Integer followersCount = 0;
+
+    @Column(name = "following_count")
+    Integer followingCount = 0;
 }
