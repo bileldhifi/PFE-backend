@@ -37,4 +37,9 @@ public class TripController {
     public TripResponse getTrip(@PathVariable UUID tripId) {
         return tripService.getTrip(tripId);
     }
+
+    @DeleteMapping("/{tripId}")
+    public void deleteTrip(@PathVariable UUID tripId) {
+        tripService.deleteTrip(tripId);
+    }
 }

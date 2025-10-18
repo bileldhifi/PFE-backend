@@ -12,4 +12,5 @@ public interface ITripService {
     TripResponse endTrip(UUID tripId);
     List<TripResponse> getTripsByUser(UUID userId);
     TripResponse getTrip(UUID tripId);
+    void deleteTrip(UUID tripId);
 }

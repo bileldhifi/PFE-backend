@@ -85,4 +85,12 @@ public class TripServiceImpl implements ITripService {
                 trip.getUser().getEmail()
         );
     }
+
+    @Override
+    public void deleteTrip(UUID tripId) {
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new RuntimeException("Trip not found"));
+        
+        tripRepository.delete(trip);
+    }
 }

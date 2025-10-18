@@ -24,6 +24,7 @@ public class SecurityConfig {
                                 "/auth/reset-password",
                                 "/users/add",
                                 "/uploads/**",
+                                "/trips/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**").permitAll()
                         // All other endpoints need authentication
