@@ -20,7 +20,7 @@ public class Media {
     UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
+    @JoinColumn(name = "post_id", nullable = true)
     Post post;
 
     @Enumerated(EnumType.STRING)

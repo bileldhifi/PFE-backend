@@ -6,8 +6,16 @@ import org.springframework.web.bind.annotation.*;
 import tn.esprit.exam.dto.UserRequest;
 import tn.esprit.exam.dto.UserResponse;
 import tn.esprit.exam.service.IUserService;
+import tn.esprit.exam.service.IMediaService;
 import tn.esprit.exam.repository.UserRepository;
+import tn.esprit.exam.repository.MediaRepository;
 import tn.esprit.exam.entity.User;
+import tn.esprit.exam.entity.Media;
+import tn.esprit.exam.entity.MediaKind;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,6 +28,8 @@ public class UserController {
 
     IUserService userService;
     UserRepository userRepository;
+    IMediaService mediaService;
+    MediaRepository mediaRepository;
 
     @GetMapping
     public List<UserResponse> getAllUsers() {
@@ -44,7 +54,7 @@ public class UserController {
             user.getDefaultVisibility(),
             user.getCreatedAt(),
             user.getBio(),
-            user.getAvatarUrl(),
+            user.getAvatarMedia() != null ? user.getAvatarMedia().getUrl() : null,
             user.getTripsCount(),
             user.getStepsCount(),
             user.getFollowersCount(),
@@ -91,5 +101,47 @@ public class UserController {
     @DeleteMapping("/{userId}")
     public void deleteUser(@PathVariable UUID userId) {
         userService.removeUser(userId);
+    }
+
+    @PostMapping(
+        value = "/me/avatar",
+        consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public String uploadAvatar(Authentication auth, @RequestPart("file") MultipartFile file) throws IOException {
+        String email = auth != null ? auth.getName() : null;
+        if (email == null) {
+            throw new RuntimeException("User not authenticated");
+        }
+
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Upload the avatar media
+        var mediaResponse = mediaService.uploadAvatar(file);
+        
+        // Fetch the actual saved media object from database
+        Media media = mediaRepository.findById(mediaResponse.id())
+            .orElseThrow(() -> new RuntimeException("Media not found after upload"));
+        
+        // Update user with new avatar
+        user.setAvatarMedia(media);
+        userRepository.save(user);
+
+        return mediaResponse.url();
+    }
+
+    @DeleteMapping("/me/avatar")
+    public void deleteAvatar(Authentication auth) {
+        String email = auth != null ? auth.getName() : null;
+        if (email == null) {
+            throw new RuntimeException("User not authenticated");
+        }
+
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Clear user's avatar
+        user.setAvatarMedia(null);
+        userRepository.save(user);
     }
 }

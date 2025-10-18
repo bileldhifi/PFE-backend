@@ -59,9 +59,7 @@ public class UserServiceImpl implements IUserService{
         if (request.bio() != null) {
             user.setBio(request.bio());
         }
-        if (request.avatarUrl() != null) {
-            user.setAvatarUrl(request.avatarUrl());
-        }
+        // Note: Avatar is now handled through Media entity, not directly through UserRequest
         if (request.defaultVisibility() != null) {
             user.setDefaultVisibility(request.defaultVisibility());
         }
@@ -85,7 +83,7 @@ public class UserServiceImpl implements IUserService{
                 user.getDefaultVisibility(),
                 user.getCreatedAt(),
                 user.getBio(),
-                user.getAvatarUrl(),
+                user.getAvatarMedia() != null ? user.getAvatarMedia().getUrl() : null,
                 user.getTripsCount(),
                 user.getStepsCount(),
                 user.getFollowersCount(),

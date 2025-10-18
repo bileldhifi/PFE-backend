@@ -10,4 +10,5 @@ import java.util.UUID;
 
 public interface IMediaService {
     MediaResponse uploadMedia(UUID postId, MultipartFile file, MediaKind type) throws IOException;
+    MediaResponse uploadAvatar(MultipartFile file) throws IOException;
 }

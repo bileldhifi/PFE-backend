@@ -49,4 +49,37 @@ public class MediaServiceImpl implements IMediaService {
         return new MediaResponse(saved.getId(), saved.getType(), saved.getUrl(),
                 saved.getSizeBytes(), saved.getWidth(), saved.getHeight(), saved.getDurationS());
     }
+
+    @Override
+    public MediaResponse uploadAvatar(MultipartFile file) throws IOException {
+        // Validate file type
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new RuntimeException("File must be an image");
+        }
+
+        // Validate file size (max 5MB)
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new RuntimeException("File size must be less than 5MB");
+        }
+
+        Path uploadPath = Paths.get(UPLOAD_DIR + "avatars/");
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        Path filePath = uploadPath.resolve(filename);
+        file.transferTo(filePath.toFile());
+
+        Media media = new Media();
+        media.setPost(null); // Avatar media doesn't need a post
+        media.setType(MediaKind.PHOTO);
+        media.setUrl("/uploads/avatars/" + filename);
+        media.setSizeBytes(file.getSize());
+
+        Media saved = mediaRepository.save(media);
+        return new MediaResponse(saved.getId(), saved.getType(), saved.getUrl(),
+                saved.getSizeBytes(), saved.getWidth(), saved.getHeight(), saved.getDurationS());
+    }
 }

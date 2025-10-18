@@ -45,8 +45,9 @@ public class User
     @Column(columnDefinition = "TEXT")
     String bio;
 
-    @Column(name = "avatar_url")
-    String avatarUrl;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "avatar_media_id")
+    Media avatarMedia;
 
     @Column(name = "trips_count")
     Integer tripsCount = 0;
