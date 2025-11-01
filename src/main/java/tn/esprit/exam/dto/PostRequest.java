@@ -2,7 +2,15 @@ package tn.esprit.exam.dto;
 
 import tn.esprit.exam.entity.Visibility;
 
-public record PostRequest(   Long trackPointId,
-                             String text,
-                             Visibility visibility) {
+/**
+ * Request DTO for creating a post
+ * Simplified for multipart form-data handling
+ */
+public record PostRequest(
+        Long trackPointId,
+        Double latitude,
+        Double longitude,
+        String text,
+        Visibility visibility
+) {
 }
