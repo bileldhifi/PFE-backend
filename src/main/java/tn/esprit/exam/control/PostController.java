@@ -88,6 +88,21 @@ public class PostController {
     }
 
     /**
+     * Get posts by track point
+     * Used to display media on map markers
+     *
+     * @param trackPointId Track point identifier
+     * @return List of posts at this track point
+     */
+    @GetMapping("/track-point/{trackPointId}")
+    public List<PostResponse> getPostsByTrackPoint(
+            @PathVariable Long trackPointId
+    ) {
+        log.info("Fetching posts for track point: {}", trackPointId);
+        return postService.getPostsByTrackPoint(trackPointId);
+    }
+
+    /**
      * Search public posts by location
      *
      * @param country Optional country filter

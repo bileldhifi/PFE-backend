@@ -62,4 +62,12 @@ public interface IPostService {
      * @return Post response
      */
     PostResponse getPostById(UUID postId);
+
+    /**
+     * Get posts by track point
+     *
+     * @param trackPointId Track point identifier
+     * @return List of posts at this track point
+     */
+    List<PostResponse> getPostsByTrackPoint(Long trackPointId);
 }

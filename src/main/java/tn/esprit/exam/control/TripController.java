@@ -1,18 +1,22 @@
 package tn.esprit.exam.control;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import tn.esprit.exam.dto.TimelineResponse;
 import tn.esprit.exam.dto.TripRequest;
 import tn.esprit.exam.dto.TripResponse;
-import tn.esprit.exam.entity.Trip;
 import tn.esprit.exam.service.ITripService;
 
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Trip Web Service")
 @RestController
 @RequestMapping("/trips")
 @RequiredArgsConstructor
+@Slf4j
 public class TripController {
 
     private final ITripService tripService;
@@ -41,5 +45,14 @@ public class TripController {
     @DeleteMapping("/{tripId}")
     public void deleteTrip(@PathVariable UUID tripId) {
         tripService.deleteTrip(tripId);
+    }
+
+    @GetMapping("/{tripId}/timeline")
+    public TimelineResponse getTimeline(@PathVariable UUID tripId) {
+        log.info(
+                "Fetching timeline for trip: {}", 
+                tripId
+        );
+        return tripService.getTimeline(tripId);
     }
 }

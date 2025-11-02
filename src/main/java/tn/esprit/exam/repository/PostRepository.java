@@ -9,6 +9,10 @@ import java.util.UUID;
 
 public interface PostRepository extends JpaRepository<Post, UUID> {
     List<Post> findByTripId(UUID tripId);
-    List<Post> findByVisibilityAndCountryAndCity(Visibility visibility, String country, String city);
-
+    List<Post> findByVisibilityAndCountryAndCity(
+            Visibility visibility, 
+            String country, 
+            String city
+    );
+    List<Post> findByTrackPointId(Long trackPointId);
 }

@@ -161,8 +161,8 @@ public class TrackPointServiceImpl implements ITrackPointService {
         // Get all track points and filter by distance
         return getTrackPointsByTrip(tripId)
                 .stream()
-                .filter(tp -> tp.distanceTo(    new TrackPointResponse(
-                        null, null, null, lat, lon, null, null, null, null, null
+                .filter(tp -> tp.distanceTo(new TrackPointResponse(
+                        null, null, null, lat, lon, null, null, null, null, null, null, null
                 )) <= radiusMeters)
                 .toList();
     }
@@ -205,7 +205,7 @@ public class TrackPointServiceImpl implements ITrackPointService {
         
         // Check distance
         double distance = latest.distanceTo(new TrackPointResponse(
-                null, null, null, request.lat(), request.lon(), null, null, null, null, null
+                null, null, null, request.lat(), request.lon(), null, null, null, null, null, null, null
         ));
         
         if (distance < MIN_DISTANCE_METERS) {
@@ -214,7 +214,7 @@ public class TrackPointServiceImpl implements ITrackPointService {
         
         // Check time
         long timeDiff = latest.timeDifferenceSeconds(new TrackPointResponse(
-                null, null, OffsetDateTime.now(), null, null, null, null, null, null, null
+                null, null, OffsetDateTime.now(), null, null, null, null, null, null, null, null, null
         ));
         
         if (timeDiff < MIN_TIME_SECONDS) {

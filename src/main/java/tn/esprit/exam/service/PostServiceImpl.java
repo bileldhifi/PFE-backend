@@ -209,6 +209,16 @@ public class PostServiceImpl implements IPostService {
         return mapToResponseWithMedia(post);
     }
 
+    @Override
+    public List<PostResponse> getPostsByTrackPoint(Long trackPointId) {
+        log.info("Fetching posts for track point: {}", trackPointId);
+        
+        return postRepository.findByTrackPointId(trackPointId)
+                .stream()
+                .map(this::mapToResponseWithMedia)
+                .toList();
+    }
+
     /**
      * Map post entity to response DTO with media
      * Private helper method for code reusability
