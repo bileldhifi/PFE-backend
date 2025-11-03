@@ -47,7 +47,7 @@ public record TrackPointResponse(
             trackPoint.getAccuracyM(),
             trackPoint.getSpeedMps(),
             trackPoint.getSpeedMps() != null ? trackPoint.getSpeedMps() * 3.6 : null, // Convert m/s to km/h
-            null, // Location name would be resolved by a geocoding service
+            trackPoint.getLocationName(), // Use location name from entity
             false, // Would be determined by business logic
             null, // Media count not included in basic version
             null  // First media URL not included in basic version
@@ -72,7 +72,7 @@ public record TrackPointResponse(
             trackPoint.getAccuracyM(),
             trackPoint.getSpeedMps(),
             trackPoint.getSpeedMps() != null ? trackPoint.getSpeedMps() * 3.6 : null,
-            null, // Location name
+            trackPoint.getLocationName(), // Use location name from entity
             false, // Is significant
             mediaCount,
             firstMediaUrl

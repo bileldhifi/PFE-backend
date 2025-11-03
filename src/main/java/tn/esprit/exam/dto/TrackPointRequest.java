@@ -23,7 +23,9 @@ public record TrackPointRequest(
     Double accuracyM,
     
     @DecimalMin(value = "0.0", message = "Speed must be positive")
-    Double speedMps
+    Double speedMps,
+    
+    String locationName
 ) {
     /**
      * Validates that the coordinates are within reasonable bounds

@@ -55,9 +55,12 @@ public class PostServiceImpl implements IPostService {
             Double longitude,
             String text,
             Visibility visibility,
+            String city,
+            String country,
             MultipartFile[] images
     ) throws IOException {
-        log.info("Creating post for trip: {}, user: {}", tripId, userEmail);
+        log.info("Creating post for trip: {}, user: {}, city: {}, country: {}", 
+                tripId, userEmail, city, country);
 
         // Validate and fetch entities
         Trip trip = tripRepository.findById(tripId)
@@ -78,6 +81,8 @@ public class PostServiceImpl implements IPostService {
         post.setUser(user);
         post.setText(text);
         post.setVisibility(visibility);
+        post.setCity(city);
+        post.setCountry(country);
         post.setTs(OffsetDateTime.now());
 
         // Set track point if provided
@@ -251,6 +256,8 @@ public class PostServiceImpl implements IPostService {
                         post.getTrackPoint().getLon() : null,
                 post.getUser().getEmail(),
                 post.getUser().getUsername(),
+                post.getCity(),
+                post.getCountry(),
                 mediaResponses
         );
     }
@@ -276,6 +283,8 @@ public class PostServiceImpl implements IPostService {
                 longitude,
                 post.getUser().getEmail(),
                 post.getUser().getUsername(),
+                post.getCity(),
+                post.getCountry(),
                 media
         );
     }

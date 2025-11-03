@@ -4,17 +4,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import tn.esprit.exam.dto.*;
+import tn.esprit.exam.entity.Media;
+import tn.esprit.exam.entity.Post;
 import tn.esprit.exam.entity.TrackPoint;
 import tn.esprit.exam.entity.Trip;
 import tn.esprit.exam.entity.User;
+import tn.esprit.exam.repository.PostRepository;
 import tn.esprit.exam.repository.TrackPointRepository;
 import tn.esprit.exam.repository.TripRepository;
 import tn.esprit.exam.repository.UserRepository;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +26,7 @@ public class TripServiceImpl implements ITripService {
     private final TripRepository tripRepository;
     private final UserRepository userRepository;
     private final TrackPointRepository trackPointRepository;
+    private final PostRepository postRepository;
     private final IPostService postService;
 
     @Override
@@ -38,13 +41,7 @@ public class TripServiceImpl implements ITripService {
 
         Trip saved = tripRepository.save(trip);
 
-        return new TripResponse(
-                saved.getId(),
-                saved.getTitle(),
-                saved.getStartedAt(),
-                saved.getEndedAt(),
-                saved.getUser().getEmail()
-        );
+        return mapToTripResponse(saved);
     }
 
     @Override
@@ -55,26 +52,14 @@ public class TripServiceImpl implements ITripService {
         trip.setEndedAt(OffsetDateTime.now());
         Trip updated = tripRepository.save(trip);
 
-        return new TripResponse(
-                updated.getId(),
-                updated.getTitle(),
-                updated.getStartedAt(),
-                updated.getEndedAt(),
-                updated.getUser().getEmail()
-        );
+        return mapToTripResponse(updated);
     }
 
     @Override
     public List<TripResponse> getTripsByUser(UUID userId) {
         return tripRepository.findByUserId(userId)
                 .stream()
-                .map(t -> new TripResponse(
-                        t.getId(),
-                        t.getTitle(),
-                        t.getStartedAt(),
-                        t.getEndedAt(),
-                        t.getUser().getEmail()
-                ))
+                .map(this::mapToTripResponse)
                 .toList();
     }
 
@@ -83,13 +68,7 @@ public class TripServiceImpl implements ITripService {
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new RuntimeException("Trip not found"));
 
-        return new TripResponse(
-                trip.getId(),
-                trip.getTitle(),
-                trip.getStartedAt(),
-                trip.getEndedAt(),
-                trip.getUser().getEmail()
-        );
+        return mapToTripResponse(trip);
     }
 
     @Override
@@ -144,6 +123,28 @@ public class TripServiceImpl implements ITripService {
                     .sum();
             totalPhotos += photoCount;
             
+            // Get location name with priority: TrackPoint > Post
+            String locationName = trackPoint.getLocationName();
+            
+            // Fallback to post location name if track point doesn't have one
+            if (locationName == null || locationName.isBlank()) {
+                if (!posts.isEmpty()) {
+                    PostResponse firstPost = posts.get(0);
+                    if (firstPost.city() != null && !firstPost.city().isBlank()) {
+                        if (firstPost.country() != null && 
+                                !firstPost.country().isBlank()) {
+                            locationName = firstPost.city() + ", " + 
+                                    firstPost.country();
+                        } else {
+                            locationName = firstPost.city();
+                        }
+                    } else if (firstPost.country() != null && 
+                            !firstPost.country().isBlank()) {
+                        locationName = firstPost.country();
+                    }
+                }
+            }
+            
             // Calculate distance and time from previous point
             Double distanceFromPrevious = null;
             Long timeFromPrevious = null;
@@ -179,8 +180,7 @@ public class TripServiceImpl implements ITripService {
                     .timestamp(trackPoint.getTs())
                     .latitude(trackPoint.getLat())
                     .longitude(trackPoint.getLon())
-                    .locationName(null)  
-                    // TODO: Add geocoding service
+                    .locationName(locationName)
                     .speedKmh(speedKmh)
                     .accuracyMeters(trackPoint.getAccuracyM())
                     .isSignificant(photoCount > 0)  
@@ -258,5 +258,184 @@ public class TripServiceImpl implements ITripService {
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         
         return EARTH_RADIUS_KM * c;
+    }
+    
+    /**
+     * Map Trip entity to TripResponse with calculated statistics
+     *
+     * @param trip Trip entity
+     * @return TripResponse with stats
+     */
+    private TripResponse mapToTripResponse(Trip trip) {
+        System.out.println("========================================");
+        System.out.println("🔥 CALCULATING STATS FOR TRIP: " + trip.getId());
+        System.out.println("========================================");
+        
+        TripStatsDTO stats = calculateTripStats(trip);
+        
+        System.out.println("========================================");
+        System.out.println("✅ STATS RESULT:");
+        System.out.println("   Steps: " + stats.stepsCount());
+        System.out.println("   Distance: " + stats.distanceKm() + " km");
+        System.out.println("   Countries: " + stats.countriesCount());
+        System.out.println("   Cities: " + stats.citiesCount());
+        System.out.println("   Photos: " + stats.photosCount());
+        System.out.println("   Transport methods: " + stats.transportMethods());
+        System.out.println("========================================");
+        
+        return new TripResponse(
+                trip.getId(),
+                trip.getTitle(),
+                trip.getStartedAt(),
+                trip.getEndedAt(),
+                trip.getUser().getEmail(),
+                null, // coverUrl - can be added later
+                "PUBLIC", // visibility - can be added later
+                stats
+        );
+    }
+    
+    /**
+     * Calculate comprehensive trip statistics
+     *
+     * @param trip Trip entity
+     * @return TripStatsDTO with all calculated metrics
+     */
+    private TripStatsDTO calculateTripStats(Trip trip) {
+        // Get all track points and posts for this trip
+        List<TrackPoint> trackPoints = trackPointRepository
+                .findByTripIdOrderByTsAsc(trip.getId());
+        List<Post> posts = postRepository.findByTripId(trip.getId());
+        
+        System.out.println("📊 Found " + trackPoints.size() + " track points");
+        System.out.println("📝 Found " + posts.size() + " posts");
+        
+        log.info("Calculating stats for trip {}: {} track points, {} posts", 
+                trip.getId(), trackPoints.size(), posts.size());
+        
+        // Calculate total distance
+        double totalDistance = calculateTotalDistance(trackPoints);
+        System.out.println("📏 Calculated distance: " + totalDistance + " km");
+        
+        // Count unique countries and cities
+        Set<String> countries = new HashSet<>();
+        Set<String> cities = new HashSet<>();
+        int photoCount = 0;
+        
+        for (Post post : posts) {
+            System.out.println("🔍 Checking post: " + post.getId());
+            System.out.println("   City: " + post.getCity());
+            System.out.println("   Country: " + post.getCountry());
+            System.out.println("   Media: " + (post.getMedia() != null ? post.getMedia().size() : "null"));
+            
+            if (post.getCountry() != null && !post.getCountry().isBlank()) {
+                countries.add(post.getCountry());
+            }
+            if (post.getCity() != null && !post.getCity().isBlank()) {
+                cities.add(post.getCity());
+            }
+            if (post.getMedia() != null) {
+                log.debug("Post {} has {} media items", 
+                        post.getId(), post.getMedia().size());
+                photoCount += post.getMedia().size();
+            }
+        }
+        
+        System.out.println("🌍 Unique countries: " + countries);
+        System.out.println("🏙️  Unique cities: " + cities);
+        System.out.println("📷 Total photos: " + photoCount);
+        
+        log.info("Stats calculated - Distance: {}km, Photos: {}, Countries: {}, Cities: {}", 
+                totalDistance, photoCount, countries.size(), cities.size());
+        
+        // Detect transport methods
+        Map<String, Double> transportMethods = 
+                detectTransportMethods(trackPoints);
+        
+        return new TripStatsDTO(
+                posts.size(), // stepsCount
+                totalDistance,
+                countries.size(),
+                cities.size(),
+                photoCount,
+                transportMethods
+        );
+    }
+    
+    /**
+     * Calculate total distance traveled from track points
+     *
+     * @param trackPoints List of track points ordered by timestamp
+     * @return Total distance in kilometers
+     */
+    private double calculateTotalDistance(List<TrackPoint> trackPoints) {
+        if (trackPoints == null || trackPoints.size() < 2) {
+            return 0.0;
+        }
+        
+        double totalDistance = 0.0;
+        for (int i = 1; i < trackPoints.size(); i++) {
+            TrackPoint prev = trackPoints.get(i - 1);
+            TrackPoint curr = trackPoints.get(i);
+            totalDistance += calculateDistance(prev, curr);
+        }
+        
+        return totalDistance;
+    }
+    
+    /**
+     * Detect transport methods based on speed from track points
+     * Speed thresholds (in km/h):
+     * - Walking: < 6 km/h
+     * - Biking: 6-25 km/h
+     * - Driving: 25-150 km/h
+     * - Flying: > 150 km/h
+     *
+     * @param trackPoints List of track points with speed data
+     * @return Map of transport method to distance covered
+     */
+    private Map<String, Double> detectTransportMethods(
+            List<TrackPoint> trackPoints
+    ) {
+        Map<String, Double> methods = new HashMap<>();
+        
+        if (trackPoints == null || trackPoints.size() < 2) {
+            return methods;
+        }
+        
+        double walking = 0;
+        double biking = 0;
+        double driving = 0;
+        double flying = 0;
+        
+        for (int i = 1; i < trackPoints.size(); i++) {
+            TrackPoint prev = trackPoints.get(i - 1);
+            TrackPoint curr = trackPoints.get(i);
+            
+            double distance = calculateDistance(prev, curr);
+            
+            // Convert speed from m/s to km/h (1 m/s = 3.6 km/h)
+            if (curr.getSpeedMps() != null) {
+                double speedKmh = curr.getSpeedMps() * 3.6;
+                
+                if (speedKmh < 6) {
+                    walking += distance;
+                } else if (speedKmh < 25) {
+                    biking += distance;
+                } else if (speedKmh < 150) {
+                    driving += distance;
+                } else {
+                    flying += distance;
+                }
+            }
+        }
+        
+        // Only include methods that were actually used
+        if (walking > 0.1) methods.put("Walking", walking);
+        if (biking > 0.1) methods.put("Biking", biking);
+        if (driving > 0.1) methods.put("Driving", driving);
+        if (flying > 0.1) methods.put("Flying", flying);
+        
+        return methods;
     }
 }

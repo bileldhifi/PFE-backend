@@ -23,6 +23,8 @@ public interface IPostService {
      * @param longitude Location longitude
      * @param text Post caption/text
      * @param visibility Post visibility
+     * @param city Optional city name
+     * @param country Optional country name
      * @param images Array of image files
      * @return Created post response
      * @throws IOException if file upload fails
@@ -35,6 +37,8 @@ public interface IPostService {
             Double longitude,
             String text,
             Visibility visibility,
+            String city,
+            String country,
             MultipartFile[] images
     ) throws IOException;
 

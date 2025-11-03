@@ -20,6 +20,8 @@ public record PostResponse(
         Double longitude,
         String userEmail,
         String username,
+        String city,
+        String country,
         List<MediaResponse> media
 ) {
 }

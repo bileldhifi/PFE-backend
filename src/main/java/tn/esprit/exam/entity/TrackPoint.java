@@ -31,4 +31,5 @@ public class TrackPoint {
     Double lon;
     Double accuracyM;
     Double speedMps;
+    String locationName;
 }

@@ -37,6 +37,8 @@ public class PostController {
      * @param longitude Location longitude
      * @param text Post caption/text content
      * @param visibility Post visibility (PUBLIC/PRIVATE)
+     * @param city Optional city name
+     * @param country Optional country name
      * @param images Array of image files to upload
      * @param auth Spring Security authentication object
      * @return Created post response with media URLs
@@ -53,13 +55,17 @@ public class PostController {
             @RequestParam Double longitude,
             @RequestParam(required = false) String text,
             @RequestParam Visibility visibility,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String country,
             @RequestPart(value = "images", required = false) 
                 MultipartFile[] images,
             Authentication auth
     ) throws IOException {
-        log.info("Creating post for trip: {} by user: {}", 
+        log.info("Creating post for trip: {} by user: {}, city: {}, country: {}", 
                 tripId, 
-                auth.getName());
+                auth.getName(),
+                city,
+                country);
         
         return postService.createPostWithMedia(
                 tripId,
@@ -69,6 +75,8 @@ public class PostController {
                 longitude,
                 text,
                 visibility,
+                city,
+                country,
                 images
         );
     }

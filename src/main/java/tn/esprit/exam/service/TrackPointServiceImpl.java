@@ -59,6 +59,7 @@ public class TrackPointServiceImpl implements ITrackPointService {
         trackPoint.setLon(request.lon());
         trackPoint.setAccuracyM(request.accuracyM());
         trackPoint.setSpeedMps(request.speedMps());
+        trackPoint.setLocationName(request.locationName());
         
         TrackPoint saved = trackPointRepository.save(trackPoint);
         log.info("Track point saved with id: {} for trip: {}", saved.getId(), tripId);
@@ -261,6 +262,7 @@ public class TrackPointServiceImpl implements ITrackPointService {
                     trackPoint.setLon(request.lon());
                     trackPoint.setAccuracyM(request.accuracyM());
                     trackPoint.setSpeedMps(request.speedMps());
+                    trackPoint.setLocationName(request.locationName());
                     return trackPoint;
                 })
                 .collect(Collectors.toList());
