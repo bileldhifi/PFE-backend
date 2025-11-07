@@ -14,4 +14,5 @@ public interface IUserService {
     UserResponse addUser(UserRequest user);
     UserResponse modifyUser(UUID userId, UserRequest user);
     void removeUser(UUID userId);
+    UUID getUserIdByEmail(String email);
 }

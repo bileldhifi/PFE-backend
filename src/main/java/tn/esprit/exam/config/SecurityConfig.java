@@ -38,7 +38,8 @@ public class SecurityConfig {
                                 "/users/add",
                                 "/uploads/**",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/ws/**"
                         ).permitAll()
                         // All other endpoints require authentication
                         .anyRequest().authenticated()

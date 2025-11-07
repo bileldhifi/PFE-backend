@@ -139,4 +139,10 @@ public class PostController {
         log.info("Fetching post: {}", postId);
         return postService.getPostById(postId);
     }
+
+    @GetMapping("/following")
+    public List<PostResponse> getFollowingPosts(Authentication auth) {
+        log.info("Fetching posts from followed users for: {}", auth.getName());
+        return postService.getFollowingPosts(auth.getName());
+    }
 }

@@ -18,6 +18,7 @@ public record PostResponse(
         Long trackPointId,
         Double latitude,
         Double longitude,
+        UUID userId,
         String userEmail,
         String username,
         String city,

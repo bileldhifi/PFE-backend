@@ -62,6 +62,11 @@ public class UserController {
         );
     }
 
+    @GetMapping("/{userId}")
+    public UserResponse getUserById(@PathVariable UUID userId) {
+        return userService.retrieveUser(userId);
+    }
+
     @PostMapping("/add")
     public UserResponse addUser(@RequestBody UserRequest request) {
         return userService.addUser(request);

@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.exam.dto.MediaResponse;
 import tn.esprit.exam.dto.PostResponse;
 import tn.esprit.exam.entity.*;
+import tn.esprit.exam.repository.FollowRepository;
 import tn.esprit.exam.repository.MediaRepository;
 import tn.esprit.exam.repository.PostRepository;
 import tn.esprit.exam.repository.TrackPointRepository;
@@ -37,6 +38,7 @@ public class PostServiceImpl implements IPostService {
     private final UserRepository userRepository;
     private final TrackPointRepository trackPointRepository;
     private final MediaRepository mediaRepository;
+    private final FollowRepository followRepository;
 
     private static final String UPLOAD_DIR = 
             System.getProperty("user.dir") + "/uploads/posts/";
@@ -190,12 +192,24 @@ public class PostServiceImpl implements IPostService {
                 country, 
                 city);
         
+        // If both country and city are provided, use filtered search
+        if (country != null && !country.isEmpty() && 
+            city != null && !city.isEmpty()) {
+            return postRepository
+                    .findByVisibilityAndCountryAndCity(
+                            Visibility.PUBLIC, 
+                            country, 
+                            city
+                    )
+                    .stream()
+                    .map(this::mapToResponseWithMedia)
+                    .toList();
+        }
+        
+        // Otherwise, return all public posts ordered by timestamp
+        log.info("Fetching all public posts");
         return postRepository
-                .findByVisibilityAndCountryAndCity(
-                        Visibility.PUBLIC, 
-                        country, 
-                        city
-                )
+                .findByVisibilityOrderByTsDesc(Visibility.PUBLIC)
                 .stream()
                 .map(this::mapToResponseWithMedia)
                 .toList();
@@ -242,6 +256,12 @@ public class PostServiceImpl implements IPostService {
                 ))
                 .toList();
 
+        // Ensure user is loaded (should be with JOIN FETCH, but add safety check)
+        if (post.getUser() == null) {
+            log.error("Post {} has null user, cannot create response", post.getId());
+            throw new RuntimeException("Post user is null");
+        }
+        
         return new PostResponse(
                 post.getId(),
                 post.getText(),
@@ -254,6 +274,7 @@ public class PostServiceImpl implements IPostService {
                         post.getTrackPoint().getLat() : null,
                 post.getTrackPoint() != null ? 
                         post.getTrackPoint().getLon() : null,
+                post.getUser().getId(),
                 post.getUser().getEmail(),
                 post.getUser().getUsername(),
                 post.getCity(),
@@ -271,6 +292,12 @@ public class PostServiceImpl implements IPostService {
             Double longitude, 
             List<MediaResponse> media
     ) {
+        // Ensure user is loaded (should be with JOIN FETCH, but add safety check)
+        if (post.getUser() == null) {
+            log.error("Post {} has null user, cannot create response", post.getId());
+            throw new RuntimeException("Post user is null");
+        }
+        
         return new PostResponse(
                 post.getId(),
                 post.getText(),
@@ -281,11 +308,37 @@ public class PostServiceImpl implements IPostService {
                         post.getTrackPoint().getId() : null,
                 latitude,
                 longitude,
+                post.getUser().getId(),
                 post.getUser().getEmail(),
                 post.getUser().getUsername(),
                 post.getCity(),
                 post.getCountry(),
                 media
         );
+    }
+
+    @Override
+    public List<PostResponse> getFollowingPosts(String userEmail) {
+        log.info("Fetching posts from followed users for: {}", userEmail);
+        
+        User currentUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        List<User> followingUsers = followRepository.findFollowingByFollowerId(currentUser.getId());
+        
+        if (followingUsers.isEmpty()) {
+            return List.of();
+        }
+        
+        List<UUID> followingUserIds = followingUsers.stream()
+                .map(User::getId)
+                .toList();
+        
+        return postRepository.findByUserIdInAndVisibilityOrderByTsDesc(
+                followingUserIds, 
+                Visibility.PUBLIC
+        ).stream()
+                .map(this::mapToResponseWithMedia)
+                .toList();
     }
 }

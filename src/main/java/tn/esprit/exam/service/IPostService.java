@@ -74,4 +74,12 @@ public interface IPostService {
      * @return List of posts at this track point
      */
     List<PostResponse> getPostsByTrackPoint(Long trackPointId);
+
+    /**
+     * Get posts from users that the current user follows
+     *
+     * @param userEmail Current user email
+     * @return List of posts from followed users
+     */
+    List<PostResponse> getFollowingPosts(String userEmail);
 }

@@ -73,6 +73,13 @@ public class UserServiceImpl implements IUserService{
         userRepository.deleteById(userId);
     }
 
+    @Override
+    public UUID getUserIdByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(User::getId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
     // 🔹 Utility mapper
     private UserResponse toDto(User user) {
         return new UserResponse(
