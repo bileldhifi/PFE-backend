@@ -28,6 +28,7 @@ public class CommentServiceImpl implements ICommentService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final INotificationService notificationService;
 
     @Override
     @Transactional
@@ -59,6 +60,16 @@ public class CommentServiceImpl implements ICommentService {
         );
         
         sendCommentUpdate(update);
+        
+        // Create notification for post owner
+        UUID postOwnerId = post.getUser().getId();
+        notificationService.createNotification(
+                postOwnerId,
+                userId,
+                tn.esprit.exam.entity.NotificationType.COMMENT,
+                request.postId(),
+                saved.getId()
+        );
         
         return update;
     }

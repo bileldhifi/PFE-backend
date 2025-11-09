@@ -27,6 +27,7 @@ public class LikeServiceImpl implements ILikeService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final INotificationService notificationService;
 
     @Override
     @Transactional
@@ -60,6 +61,16 @@ public class LikeServiceImpl implements ILikeService {
         );
         
         sendLikeUpdate(update);
+        
+        // Create notification for post owner
+        UUID postOwnerId = post.getUser().getId();
+        notificationService.createNotification(
+                postOwnerId,
+                userId,
+                tn.esprit.exam.entity.NotificationType.LIKE,
+                postId,
+                null
+        );
         
         return update;
     }

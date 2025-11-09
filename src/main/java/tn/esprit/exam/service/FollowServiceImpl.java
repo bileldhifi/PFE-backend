@@ -21,6 +21,7 @@ public class FollowServiceImpl implements IFollowService {
 
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
+    private final INotificationService notificationService;
 
     @Override
     @Transactional
@@ -48,6 +49,15 @@ public class FollowServiceImpl implements IFollowService {
         Follow saved = followRepository.save(follow);
         
         updateFollowCounts(followerId, followingId);
+        
+        // Create notification for the user being followed
+        notificationService.createNotification(
+                followingId,
+                followerId,
+                tn.esprit.exam.entity.NotificationType.FOLLOW,
+                null,
+                null
+        );
         
         return mapToResponse(saved);
     }

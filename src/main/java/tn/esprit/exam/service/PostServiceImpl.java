@@ -39,6 +39,7 @@ public class PostServiceImpl implements IPostService {
     private final TrackPointRepository trackPointRepository;
     private final MediaRepository mediaRepository;
     private final FollowRepository followRepository;
+    private final INotificationService notificationService;
 
     private static final String UPLOAD_DIR = 
             System.getProperty("user.dir") + "/uploads/posts/";
@@ -109,6 +110,21 @@ public class PostServiceImpl implements IPostService {
             log.info("Uploaded {} images for post: {}", 
                     images.length, 
                     savedPost.getId());
+        }
+
+        // Notify followers if post is public
+        if (visibility == Visibility.PUBLIC) {
+            List<User> followers = followRepository.findFollowersByFollowingId(user.getId());
+            for (User follower : followers) {
+                notificationService.createNotification(
+                        follower.getId(),
+                        user.getId(),
+                        NotificationType.NEW_POST,
+                        savedPost.getId(),
+                        null
+                );
+            }
+            log.info("Sent {} new post notifications to followers", followers.size());
         }
 
         return mapToResponse(savedPost, latitude, longitude, mediaResponses);
