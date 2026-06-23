@@ -28,4 +28,10 @@ public class ResetPasswordToken {
 
     @Column(nullable = false)
     LocalDateTime expiryDate;
+
+    @Column(length = 6)
+    String code;
+
+    @Column(nullable = false, columnDefinition = "boolean not null default false")
+    boolean codeVerified = false;
 }

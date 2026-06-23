@@ -5,13 +5,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.exam.dto.UserRequest;
 import tn.esprit.exam.dto.UserResponse;
+import tn.esprit.exam.dto.UserStatsResponse;
 import tn.esprit.exam.service.IUserService;
+import tn.esprit.exam.service.ITripService;
 import tn.esprit.exam.service.IMediaService;
 import tn.esprit.exam.repository.UserRepository;
 import tn.esprit.exam.repository.MediaRepository;
 import tn.esprit.exam.entity.User;
 import tn.esprit.exam.entity.Media;
-import tn.esprit.exam.entity.MediaKind;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,6 +28,7 @@ import java.util.UUID;
 public class UserController {
 
     IUserService userService;
+    ITripService tripService;
     UserRepository userRepository;
     IMediaService mediaService;
     MediaRepository mediaRepository;
@@ -65,6 +67,11 @@ public class UserController {
     @GetMapping("/{userId}")
     public UserResponse getUserById(@PathVariable UUID userId) {
         return userService.retrieveUser(userId);
+    }
+
+    @GetMapping("/{userId}/travel-stats")
+    public UserStatsResponse getUserTravelStats(@PathVariable UUID userId) {
+        return tripService.getUserTravelStats(userId);
     }
 
     @PostMapping("/add")

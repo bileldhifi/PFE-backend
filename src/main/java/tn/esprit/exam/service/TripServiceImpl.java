@@ -3,8 +3,8 @@ package tn.esprit.exam.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.exam.dto.*;
-import tn.esprit.exam.entity.Media;
 import tn.esprit.exam.entity.Post;
 import tn.esprit.exam.entity.TrackPoint;
 import tn.esprit.exam.entity.Trip;
@@ -16,7 +16,6 @@ import tn.esprit.exam.repository.UserRepository;
 
 import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -437,5 +436,51 @@ public class TripServiceImpl implements ITripService {
         if (flying > 0.1) methods.put("Flying", flying);
         
         return methods;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserStatsResponse getUserTravelStats(UUID userId) {
+        List<Trip> trips = tripRepository.findByUserId(userId);
+
+        if (trips.isEmpty()) {
+            return new UserStatsResponse(0, 0.0, 0, 0, 0, 0);
+        }
+
+        double totalDistanceKm = 0.0;
+        int totalPhotos = 0;
+        int totalPosts = 0;
+        Set<String> countries = new HashSet<>();
+        Set<String> cities = new HashSet<>();
+
+        for (Trip trip : trips) {
+            List<TrackPoint> trackPoints =
+                    trackPointRepository.findByTripIdOrderByTsAsc(trip.getId());
+            totalDistanceKm += calculateTotalDistance(trackPoints);
+
+            List<Post> posts = postRepository.findByTripId(trip.getId());
+            totalPosts += posts.size();
+
+            for (Post post : posts) {
+                if (post.getCountry() != null && !post.getCountry().isBlank()) {
+                    countries.add(post.getCountry());
+                }
+                if (post.getCity() != null && !post.getCity().isBlank()) {
+                    cities.add(post.getCity());
+                }
+                if (post.getMedia() != null) {
+                    totalPhotos += post.getMedia().size();
+                }
+            }
+        }
+
+        return new UserStatsResponse(
+                trips.size(),
+                totalDistanceKm,
+                countries.size(),
+                cities.size(),
+                totalPosts,
+                totalPhotos
+        );
     }
 }

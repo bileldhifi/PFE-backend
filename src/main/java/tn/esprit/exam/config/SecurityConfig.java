@@ -35,6 +35,7 @@ public class SecurityConfig {
                                 "/auth/register", 
                                 "/auth/forgot-password",
                                 "/auth/reset-password",
+                                "/auth/verify-reset-code",
                                 "/users/add",
                                 "/uploads/**",
                                 "/swagger-ui/**",

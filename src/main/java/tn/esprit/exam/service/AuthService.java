@@ -18,7 +18,6 @@ import tn.esprit.exam.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -29,7 +28,6 @@ public class AuthService {
     private final JwtService jwtService;
     private final ResetPasswordTokenRepository tokenRepository;
     private final MailService mailService;
-
 
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
@@ -59,29 +57,34 @@ public class AuthService {
                 user.getTripsCount(),
                 user.getStepsCount(),
                 user.getFollowersCount(),
-                user.getFollowingCount()
-        );
+                user.getFollowingCount());
 
         return new AuthResponse(accessToken, refreshToken, userDto);
     }
-
 
     public String forgotPassword(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         String token = UUID.randomUUID().toString();
+        String code = String.format("%06d", (int) (Math.random() * 1_000_000));
+        System.out.println("DEBUG: Generated Reset Code: " + code);
         ResetPasswordToken resetToken = new ResetPasswordToken();
         resetToken.setToken(token);
         resetToken.setUser(user);
         resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15));
+        resetToken.setCode(code);
+        resetToken.setCodeVerified(false);
         tokenRepository.save(resetToken);
 
         String resetLink = "http://localhost:8089/app-backend/auth/reset-password?token=" + token;
 
         String html = "<h2>Password Reset Request</h2>"
                 + "<p>Hello " + user.getUsername() + ",</p>"
-                + "<p>You requested to reset your password. Click the button below:</p>"
+                + "<p>You requested to reset your password.</p>"
+                + "<p><strong>Your verification code:</strong> <span style='font-size:18px; letter-spacing:3px;'>"
+                + code + "</span></p>"
+                + "<p>Enter this code in the app to proceed, or click the button below:</p>"
                 + "<p><a href='" + resetLink + "' style='display:inline-block;padding:10px 20px;"
                 + "background:#007bff;color:#fff;text-decoration:none;border-radius:5px;'>"
                 + "Reset Password</a></p>"
@@ -94,8 +97,26 @@ public class AuthService {
             throw new RuntimeException("Failed to send password reset email", e);
         }
 
-
         return "Reset password email sent!";
+    }
+
+    public String verifyResetCode(String email, String code) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        ResetPasswordToken latest = tokenRepository.findTopByUserOrderByExpiryDateDesc(user)
+                .orElseThrow(() -> new RuntimeException("No reset request found"));
+
+        if (latest.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Code expired");
+        }
+        if (latest.getCode() == null || !latest.getCode().equals(code)) {
+            throw new RuntimeException("Invalid code");
+        }
+        latest.setCodeVerified(true);
+        tokenRepository.save(latest);
+        // Return the reset token so the client can call reset-password
+        return latest.getToken();
     }
 
     public void resetPassword(String token, String newPassword) {
@@ -116,7 +137,7 @@ public class AuthService {
     public void changePassword(ChangePasswordRequest request) {
         // Get current user from security context
         String currentUserEmail = getCurrentUserEmail();
-        
+
         User user = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -133,7 +154,7 @@ public class AuthService {
     public AuthResponse refreshToken(String refreshToken) {
         // Validate refresh token
         String email = jwtService.extractUsername(refreshToken);
-        
+
         // Find user
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -159,8 +180,7 @@ public class AuthService {
                 user.getTripsCount(),
                 user.getStepsCount(),
                 user.getFollowersCount(),
-                user.getFollowingCount()
-        );
+                user.getFollowingCount());
 
         return new AuthResponse(newAccessToken, newRefreshToken, userDto);
     }

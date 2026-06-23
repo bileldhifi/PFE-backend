@@ -40,6 +40,11 @@ public class AuthController {
         return "Password reset successful!";
     }
 
+    @PostMapping("/verify-reset-code")
+    public String verifyResetCode(@RequestParam String email, @RequestParam String code) {
+        return authService.verifyResetCode(email, code);
+    }
+
     @PutMapping("/change-password")
     public String changePassword(@RequestBody ChangePasswordRequest request) {
         authService.changePassword(request);
