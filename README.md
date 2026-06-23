@@ -45,28 +45,6 @@ Spring Boot REST API for a **travel diary / social travel app**. Users record GP
 
 ## Architecture
 
-```mermaid
-flowchart TB
-    Client["Mobile / Web Client"]
-    API["REST Controllers"]
-    WS["WebSocket STOMP /ws"]
-    Auth["JwtAuthFilter + SecurityConfig"]
-    Svc["Service Layer"]
-    Repo["Spring Data JPA Repositories"]
-    DB[("PostgreSQL")]
-    FS["Local filesystem uploads/"]
-
-    Client -->|HTTP + Bearer JWT| Auth
-    Auth --> API
-    Client -->|SockJS + STOMP| WS
-    API --> Svc
-    WS --> Svc
-    Svc --> Repo
-    Repo --> DB
-    Svc --> FS
-    Svc -->|SimpMessagingTemplate| WS
-```
-
 **Layers**
 
 1. **Controllers** (`control/`) — HTTP mapping, request validation, auth context
@@ -211,28 +189,7 @@ curl -X POST http://localhost:8089/app-backend/auth/login \
   -d '{"email":"user@example.com","password":"secret123"}'
 ```
 
-Response:
-
-```json
-{
-  "accessToken": "eyJ...",
-  "refreshToken": "eyJ...",
-  "user": {
-    "id": "uuid",
-    "email": "user@example.com",
-    "username": "traveler",
-    "role": "USER",
-    "defaultVisibility": "PRIVATE",
-    "createdAt": "2025-01-01T10:00:00+01:00",
-    "bio": null,
-    "avatarUrl": null,
-    "tripsCount": 0,
-    "stepsCount": 0,
-    "followersCount": 0,
-    "followingCount": 0
-  }
-}
-```
+Returns an `AuthResponse` with `accessToken`, `refreshToken`, and `user` (see [docs/API.md](docs/API.md)).
 
 ---
 
@@ -395,31 +352,6 @@ stomp.connect({}, () => {
 
 ## Data model
 
-```mermaid
-erDiagram
-    User ||--o{ Trip : owns
-    User ||--o{ Post : writes
-    User ||--o{ Like : gives
-    User ||--o{ Comment : writes
-    User ||--o{ Follow : follower
-    User ||--o{ Follow : following
-    User ||--o{ Notification : receives
-    User ||--o{ DirectMessage : sends
-    User ||--o| Media : avatar
-
-    Trip ||--o{ TrackPoint : contains
-    Trip ||--o{ Post : contains
-
-    Post ||--o{ Media : has
-    Post ||--o{ Like : receives
-    Post ||--o{ Comment : receives
-    Post }o--o| TrackPoint : optional
-
-    Conversation ||--o{ DirectMessage : contains
-    User ||--o{ Conversation : participantA
-    User ||--o{ Conversation : participantB
-```
-
 ### Enums
 
 | Enum | Values |
@@ -447,7 +379,7 @@ Static files are served without authentication at `/uploads/**`.
 
 See **[docs/API.md](docs/API.md)** for:
 
-- Complete request/response JSON schemas
+- Complete request/response details
 - Query parameters and validation rules
 - Multipart form field names
 - WebSocket payload structures
